@@ -20,3 +20,6 @@ export function matchAll(pattern: RegExp, text: string): Array<RegExpMatchArray>
   }
   return out;
 }
+
+export { parseFootnoteDefinitions, serializeFootnoteContent } from './footnoteDefinitions';
+export type { FootnoteDefinition } from './footnoteDefinitions';

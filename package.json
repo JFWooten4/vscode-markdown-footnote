@@ -29,7 +29,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onCommand:vscode-markdown-footnote.openFootnoteEditor"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -37,6 +38,10 @@
       {
         "command": "vscode-markdown-footnote.insertFootnote",
         "title": "Insert a Footnote"
+      },
+      {
+        "command": "vscode-markdown-footnote.openFootnoteEditor",
+        "title": "Open Footnote Editor"
       }
     ],
     "markdown.markdownItPlugins": true
