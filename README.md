@@ -29,6 +29,8 @@
 
   ![Use command to insert a footnote](assets/command-to-insert.png)
 
+- Edit footnotes in a synchronized side editor. Run **Open Footnote Editor** to keep the current Markdown file's footnotes open beside your draft. Inserting a new footnote keeps the Markdown cursor at the reference and moves focus directly to the new footnote in the side editor.
+
 - Render footnotes in the built-in markdown preview.
 
   ![Preview](assets/preview.png)
