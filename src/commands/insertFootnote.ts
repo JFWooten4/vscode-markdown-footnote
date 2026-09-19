@@ -1,18 +1,19 @@
 import * as vscode from 'vscode';
 import { footnoteRefRegex, matchAll } from '../utils';
-type InsertFootnoteArgs = { footnoteName: string };
 
-function nextLine(position: vscode.Position) {
-  return new vscode.Position(position.line + 1, 0);
-}
+type InsertFootnoteArgs = { footnoteName?: string };
+type OpenFootnoteEditor = (document: vscode.TextDocument, footnoteName: string) => Thenable<void>;
 
-export default async function insertFootnote({ footnoteName } = {} as InsertFootnoteArgs) {
+export default async function insertFootnote(
+  { footnoteName }: InsertFootnoteArgs = {},
+  openFootnoteEditor?: OpenFootnoteEditor,
+) {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
     return;
   }
 
-  let text: string;
+  const insertionPosition = editor.selection.start;
   const shouldInsertFootnoteRef = !footnoteName;
 
   if (shouldInsertFootnoteRef) {
@@ -22,28 +23,46 @@ export default async function insertFootnote({ footnoteName } = {} as InsertFoot
       placeHolder: 'Footnote name',
       value: '' + (refMatches.length + 1),
     });
-
     if (input === undefined) {
       return;
     }
-
     footnoteName = input;
   }
 
-  footnoteName = footnoteName.replace(/\s/g, '');
+  footnoteName = (footnoteName || '').replace(/\s/g, '');
+  if (!footnoteName) {
+    return;
+  }
 
-  editor.edit((edit) => {
-    if (shouldInsertFootnoteRef) {
-      edit.insert(editor.selection.start, `[^${footnoteName}]`);
+  let referenceCursor = insertionPosition;
+  if (shouldInsertFootnoteRef) {
+    const reference = `[^${footnoteName}]`;
+    const insertedReference = await editor.edit(
+      (edit) => edit.insert(insertionPosition, reference),
+      { undoStopBefore: true, undoStopAfter: false },
+    );
+    if (!insertedReference) {
+      return;
     }
+    referenceCursor = insertionPosition.translate(0, reference.length);
+  }
 
-    text = editor.document.getText();
-    const emptyLinesAbove = text.slice(-1) === '\n' ? '\n' : '\n\n';
-    const endPosition = editor.document.positionAt(text.length);
-    edit.insert(endPosition, `${emptyLinesAbove}[^${footnoteName}]: `);
-    const newEndPosition = editor.document.positionAt(editor.document.getText().length);
+  const text = editor.document.getText();
+  const emptyLinesAbove = text.length === 0 ? '' : text.endsWith('\n') ? '\n' : '\n\n';
+  const endPosition = editor.document.positionAt(text.length);
+  const insertedDefinition = await editor.edit(
+    (edit) => edit.insert(endPosition, `${emptyLinesAbove}[^${footnoteName}]: `),
+    { undoStopBefore: false, undoStopAfter: true },
+  );
+  if (!insertedDefinition) {
+    return;
+  }
 
-    editor.selection = new vscode.Selection(newEndPosition, newEndPosition); // set cursor
-    editor.revealRange(new vscode.Range(newEndPosition, nextLine(newEndPosition))); // scroll to
-  });
+  if (shouldInsertFootnoteRef) {
+    editor.selection = new vscode.Selection(referenceCursor, referenceCursor);
+  }
+
+  if (openFootnoteEditor) {
+    await openFootnoteEditor(editor.document, footnoteName);
+  }
 }

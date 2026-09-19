@@ -11,6 +11,7 @@ describe('insertFootnote', () => {
         getText: jest.fn(() => 'Text without footnotes'),
       },
       edit,
+      selection: { start: {} },
     };
 
     (vscode.window as any).activeTextEditor = editor;
