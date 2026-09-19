@@ -41,7 +41,7 @@ export default async function insertFootnote(
     const reference = `[^${footnoteName}]`;
     const insertedReference = await editor.edit(
       (edit) => edit.insert(insertionPosition, reference),
-      { undoStopAfter: false },
+      { undoStopBefore: true, undoStopAfter: false },
     );
     if (!insertedReference) {
       return;
@@ -70,7 +70,7 @@ export default async function insertFootnote(
 
   const insertedDefinition = await editor.edit(
     (edit) => edit.insert(definitionPosition, definitionText),
-    { undoStopBefore: false },
+    { undoStopBefore: false, undoStopAfter: true },
   );
   if (!insertedDefinition) {
     return;
