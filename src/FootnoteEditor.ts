@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
-import { parseFootnoteDefinitions, serializeFootnoteContent } from './utils/footnoteDefinitions';
+import {
+  getFootnoteDefinitionEndOffset,
+  parseFootnoteDefinitions,
+  serializeFootnoteContent,
+} from './utils/footnoteDefinitions';
 
 type UpdateFootnoteMessage = {
   type: 'updateFootnote';
@@ -11,7 +15,12 @@ type ReadyMessage = {
   type: 'ready';
 };
 
-type WebviewMessage = UpdateFootnoteMessage | ReadyMessage;
+type FocusFootnoteMessage = {
+  type: 'focusFootnote';
+  name: string;
+};
+
+type WebviewMessage = UpdateFootnoteMessage | ReadyMessage | FocusFootnoteMessage;
 
 export default class FootnoteEditor implements vscode.Disposable {
   private panel: vscode.WebviewPanel | undefined;
@@ -20,6 +29,7 @@ export default class FootnoteEditor implements vscode.Disposable {
   private pendingFocusName: string | undefined;
   private applyingWebviewEdit = false;
   private webviewEditQueue: Promise<void> = Promise.resolve();
+  private readonly lastFocusedFootnoteByDocument = new Map<string, string>();
   private readonly disposables: vscode.Disposable[] = [];
 
   constructor() {
@@ -52,12 +62,34 @@ export default class FootnoteEditor implements vscode.Disposable {
 
     this.sourceUri = document.uri;
     this.pendingFocusName = focusName;
+    if (focusName) {
+      this.lastFocusedFootnoteByDocument.set(document.uri.toString(), focusName);
+    }
     this.ensurePanel();
     this.panel!.reveal(vscode.ViewColumn.Beside, false);
 
     if (this.webviewReady) {
       await this.sync(document);
     }
+  }
+
+  getDefinitionInsertionPosition(document: vscode.TextDocument): vscode.Position | undefined {
+    const footnoteName = this.lastFocusedFootnoteByDocument.get(document.uri.toString());
+    if (!footnoteName) {
+      return undefined;
+    }
+
+    const definitionEndOffset = getFootnoteDefinitionEndOffset(document.getText(), footnoteName);
+    if (definitionEndOffset === undefined) {
+      return undefined;
+    }
+
+    const definitionEndLine = document.positionAt(definitionEndOffset).line;
+    if (definitionEndLine + 1 < document.lineCount) {
+      return new vscode.Position(definitionEndLine + 1, 0);
+    }
+
+    return document.lineAt(definitionEndLine).range.end;
   }
 
   dispose() {
@@ -106,6 +138,13 @@ export default class FootnoteEditor implements vscode.Disposable {
       if (this.sourceUri) {
         const document = await vscode.workspace.openTextDocument(this.sourceUri);
         await this.sync(document);
+      }
+      return;
+    }
+
+    if (message.type === 'focusFootnote') {
+      if (this.sourceUri) {
+        this.lastFocusedFootnoteByDocument.set(this.sourceUri.toString(), message.name);
       }
       return;
     }
@@ -168,6 +207,7 @@ export default class FootnoteEditor implements vscode.Disposable {
     this.pendingFocusName = undefined;
     await this.panel.webview.postMessage({
       type: 'setFootnotes',
+      documentKey: document.uri.toString(),
       fileName: document.fileName.split(/[\\/]/).pop() || document.fileName,
       footnotes: parseFootnoteDefinitions(document.getText()).map(({ name, content }) => ({ name, content })),
       focusName,
@@ -253,13 +293,52 @@ export default class FootnoteEditor implements vscode.Disposable {
     const list = document.getElementById('list');
     const empty = document.getElementById('empty');
     const fileName = document.getElementById('fileName');
+    let currentDocumentKey;
 
-    function render(message) {
-      const hadFocus = document.hasFocus();
+    function readViewState(documentKey) {
+      const state = vscode.getState() || {};
+      return state[documentKey] || {};
+    }
+
+    function writeViewState(documentKey, patch) {
+      if (!documentKey) {
+        return;
+      }
+      const state = vscode.getState() || {};
+      vscode.setState({
+        ...state,
+        [documentKey]: {
+          ...(state[documentKey] || {}),
+          ...patch,
+        },
+      });
+    }
+
+    function rememberCurrentView() {
+      if (!currentDocumentKey) {
+        return;
+      }
       const active = document.activeElement;
       const activeName = active && active.dataset ? active.dataset.name : undefined;
-      const selectionStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : undefined;
-      const selectionEnd = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : undefined;
+      const patch = { scrollY: window.scrollY };
+      if (activeName) {
+        patch.activeName = activeName;
+        patch.selectionStart = typeof active.selectionStart === 'number' ? active.selectionStart : undefined;
+        patch.selectionEnd = typeof active.selectionEnd === 'number' ? active.selectionEnd : undefined;
+      }
+      writeViewState(currentDocumentKey, patch);
+    }
+
+    function render(message) {
+      rememberCurrentView();
+
+      const hadFocus = document.hasFocus();
+      currentDocumentKey = message.documentKey;
+      const savedView = readViewState(currentDocumentKey);
+      const activeName = savedView.activeName;
+      const selectionStart = savedView.selectionStart;
+      const selectionEnd = savedView.selectionEnd;
+      const savedScrollY = typeof savedView.scrollY === 'number' ? savedView.scrollY : 0;
 
       fileName.textContent = message.fileName || '';
       list.textContent = '';
@@ -276,6 +355,24 @@ export default class FootnoteEditor implements vscode.Disposable {
         textarea.value = footnote.content;
         textarea.dataset.name = footnote.name;
         textarea.setAttribute('aria-label', 'Footnote ' + footnote.name);
+        textarea.addEventListener('focus', () => {
+          writeViewState(currentDocumentKey, {
+            activeName: footnote.name,
+            selectionStart: textarea.selectionStart,
+            selectionEnd: textarea.selectionEnd,
+          });
+          vscode.postMessage({
+            type: 'focusFootnote',
+            name: footnote.name,
+          });
+        });
+        textarea.addEventListener('select', () => {
+          writeViewState(currentDocumentKey, {
+            activeName: footnote.name,
+            selectionStart: textarea.selectionStart,
+            selectionEnd: textarea.selectionEnd,
+          });
+        });
         textarea.addEventListener('input', () => {
           vscode.postMessage({
             type: 'updateFootnote',
@@ -290,27 +387,44 @@ export default class FootnoteEditor implements vscode.Disposable {
       }
 
       const targetName = message.focusName || (hadFocus ? activeName : undefined);
-      if (!targetName) {
-        return;
-      }
-
-      const target = Array.from(list.querySelectorAll('textarea')).find(
-        (textarea) => textarea.dataset.name === targetName,
-      );
-      if (!target) {
-        return;
-      }
 
       requestAnimationFrame(() => {
-        target.focus();
+        window.scrollTo(0, savedScrollY);
+
+        if (!targetName) {
+          return;
+        }
+
+        const target = Array.from(list.querySelectorAll('textarea')).find(
+          (textarea) => textarea.dataset.name === targetName,
+        );
+        if (!target) {
+          return;
+        }
+
+        target.focus({ preventScroll: true });
         if (message.focusName) {
           const end = target.value.length;
           target.setSelectionRange(end, end);
+          target.scrollIntoView({ block: 'nearest' });
         } else if (selectionStart !== undefined && selectionEnd !== undefined) {
           target.setSelectionRange(selectionStart, selectionEnd);
         }
+
+        writeViewState(currentDocumentKey, {
+          scrollY: window.scrollY,
+          activeName: targetName,
+          selectionStart: target.selectionStart,
+          selectionEnd: target.selectionEnd,
+        });
       });
     }
+
+    window.addEventListener('scroll', () => {
+      if (currentDocumentKey) {
+        writeViewState(currentDocumentKey, { scrollY: window.scrollY });
+      }
+    }, { passive: true });
 
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'setFootnotes') {

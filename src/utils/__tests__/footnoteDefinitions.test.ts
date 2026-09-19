@@ -1,4 +1,8 @@
-import { parseFootnoteDefinitions, serializeFootnoteContent } from '../footnoteDefinitions';
+import {
+  getFootnoteDefinitionEndOffset,
+  parseFootnoteDefinitions,
+  serializeFootnoteContent,
+} from '../footnoteDefinitions';
 
 describe('parseFootnoteDefinitions', () => {
   it('parses single-line footnotes', () => {
@@ -40,5 +44,21 @@ describe('serializeFootnoteContent', () => {
 
   it('uses the document line ending', () => {
     expect(serializeFootnoteContent('First\nSecond', '\r\n')).toBe('First\r\n    Second');
+  });
+});
+
+describe('getFootnoteDefinitionEndOffset', () => {
+  it('anchors insertion after the last line of the selected footnote', () => {
+    const text = [
+      '[^one]: First note',
+      '    continued',
+      '[^two]: Second note',
+    ].join('\n');
+
+    expect(getFootnoteDefinitionEndOffset(text, 'one')).toBe(text.indexOf('\n[^two]'));
+  });
+
+  it('returns undefined when the remembered footnote no longer exists', () => {
+    expect(getFootnoteDefinitionEndOffset('[^one]: First note', 'missing')).toBeUndefined();
   });
 });

@@ -3,10 +3,12 @@ import { footnoteRefRegex, matchAll } from '../utils';
 
 type InsertFootnoteArgs = { footnoteName?: string };
 type OpenFootnoteEditor = (document: vscode.TextDocument, footnoteName: string) => Thenable<void>;
+type GetDefinitionInsertionPosition = (document: vscode.TextDocument) => vscode.Position | undefined;
 
 export default async function insertFootnote(
   { footnoteName }: InsertFootnoteArgs = {},
   openFootnoteEditor?: OpenFootnoteEditor,
+  getDefinitionInsertionPosition?: GetDefinitionInsertionPosition,
 ) {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -48,10 +50,26 @@ export default async function insertFootnote(
   }
 
   const text = editor.document.getText();
-  const emptyLinesAbove = text.length === 0 ? '' : text.endsWith('\n') ? '\n' : '\n\n';
-  const endPosition = editor.document.positionAt(text.length);
+  const eol = editor.document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+  const preferredPosition = getDefinitionInsertionPosition?.(editor.document);
+  let definitionPosition = preferredPosition || editor.document.positionAt(text.length);
+  let definitionText: string;
+
+  if (preferredPosition) {
+    const preferredOffset = editor.document.offsetAt(preferredPosition);
+    if (preferredOffset === text.length) {
+      const prefix = text.length === 0 || text.endsWith('\n') ? '' : eol;
+      definitionText = `${prefix}[^${footnoteName}]: `;
+    } else {
+      definitionText = `[^${footnoteName}]: ${eol}`;
+    }
+  } else {
+    const emptyLinesAbove = text.length === 0 ? '' : text.endsWith('\n') ? eol : `${eol}${eol}`;
+    definitionText = `${emptyLinesAbove}[^${footnoteName}]: `;
+  }
+
   const insertedDefinition = await editor.edit(
-    (edit) => edit.insert(endPosition, `${emptyLinesAbove}[^${footnoteName}]: `),
+    (edit) => edit.insert(definitionPosition, definitionText),
     { undoStopBefore: false },
   );
   if (!insertedDefinition) {

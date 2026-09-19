@@ -124,3 +124,7 @@ export function serializeFootnoteContent(content: string, eol = '\n'): string {
     })
     .join(eol);
 }
+
+export function getFootnoteDefinitionEndOffset(text: string, name: string): number | undefined {
+  return parseFootnoteDefinitions(text).find((definition) => definition.name === name)?.endOffset;
+}
