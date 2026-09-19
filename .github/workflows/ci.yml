@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master, 'feature/**']
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 permissions:
   contents: read
@@ -73,7 +73,7 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Package extension
-        run: npx --no-install vsce package --no-dependencies --out extension.vsix
+        run: npx --no-install vsce package --out extension.vsix
 
   dependency-review:
     name: Review dependency changes
