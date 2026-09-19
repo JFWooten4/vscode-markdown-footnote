@@ -17,12 +17,17 @@ export default async function insertFootnote({ footnoteName } = {} as InsertFoot
 
   if (shouldInsertFootnoteRef) {
     const refMatches = matchAll(footnoteRefRegex, editor.document.getText());
-    footnoteName =
-      (await vscode.window.showInputBox({
-        prompt: 'Footnote name (no space or tab)',
-        placeHolder: 'Footnote name',
-        value: '' + (refMatches.length + 1),
-      })) || '';
+    const input = await vscode.window.showInputBox({
+      prompt: 'Footnote name (no space or tab)',
+      placeHolder: 'Footnote name',
+      value: '' + (refMatches.length + 1),
+    });
+
+    if (input === undefined) {
+      return;
+    }
+
+    footnoteName = input;
   }
 
   footnoteName = footnoteName.replace(/\s/g, '');
