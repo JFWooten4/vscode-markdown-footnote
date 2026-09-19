@@ -255,6 +255,7 @@ export default class FootnoteEditor implements vscode.Disposable {
     const fileName = document.getElementById('fileName');
 
     function render(message) {
+      const hadFocus = document.hasFocus();
       const active = document.activeElement;
       const activeName = active && active.dataset ? active.dataset.name : undefined;
       const selectionStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : undefined;
@@ -288,7 +289,7 @@ export default class FootnoteEditor implements vscode.Disposable {
         list.appendChild(section);
       }
 
-      const targetName = message.focusName || activeName;
+      const targetName = message.focusName || (hadFocus ? activeName : undefined);
       if (!targetName) {
         return;
       }
