@@ -38,6 +38,78 @@
 - Support multiline footnote content.
 - Support `pandoc-citeproc` format [citations](https://crsh.github.io/papaja_man/writing.html#citations)
 
+## Build and use this fork locally
+
+This fork does not need to be published to the VS Code Marketplace. You can run it directly from the source checkout while developing, or package it as a local `.vsix` and install it into your normal VS Code profile.
+
+### Prerequisites
+
+Install:
+
+- [Visual Studio Code](https://code.visualstudio.com/)
+- [Git](https://git-scm.com/)
+- [Node.js](https://nodejs.org/) with npm
+
+### 1. Clone and install dependencies
+
+```sh
+git clone https://github.com/JFWooten4/vscode-markdown-footnote.git
+cd vscode-markdown-footnote
+npm install
+```
+
+### 2. Compile the extension
+
+```sh
+npx tsc -p .
+```
+
+The compiled JavaScript is written to the `out/` directory.
+
+### 3. Run it directly for development
+
+Open the repository in VS Code:
+
+```sh
+code .
+```
+
+Then press <kbd>F5</kbd>, or open **Run and Debug** and choose **Run Extension**.
+
+VS Code will compile the extension and open a separate **Extension Development Host** window with this checkout loaded. You can test the extension there without installing or publishing anything.
+
+After changing the source, stop the development host and press <kbd>F5</kbd> again to rebuild and relaunch it.
+
+### 4. Install this fork into your normal VS Code
+
+Package the current checkout as a local VS Code extension:
+
+```sh
+npx vsce package --out markdown-footnote-local.vsix
+```
+
+Install that file:
+
+```sh
+code --install-extension markdown-footnote-local.vsix --force
+```
+
+If the `code` command is not available in your shell, open VS Code, go to the **Extensions** view, open the **...** menu, choose **Install from VSIX...**, and select `markdown-footnote-local.vsix`.
+
+Reload VS Code after installation if prompted.
+
+### Rebuild after making changes
+
+To replace the locally installed copy with a new build:
+
+```sh
+npx tsc -p .
+npx vsce package --out markdown-footnote-local.vsix
+code --install-extension markdown-footnote-local.vsix --force
+```
+
+No Marketplace publishing step is required.
+
 ## Contributing
 
 - File bugs, feature requests in [GitHub Issues](https://github.com/houkanshan/vscode-markdown-footnote/issues).
@@ -49,7 +121,7 @@
 - `npm install`
 - Create your feature branch: `git checkout -b my-new-feature`
 - Make changes and add tests
-- `npm test:watch` and check your changes by pressing `F5`
+- `npm run test:watch` and check your changes by pressing `F5`
 - Commit your changes: `git commit -am 'feat: Add some feature'`
 - Push to the branch: `git push origin my-new-feature`
 - Submit a pull request
