@@ -19,7 +19,11 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('_vscode-markdown-footnote.gotoLineColumn', gotoLineColumn),
     vscode.commands.registerCommand('_vscode-markdown-footnote.peek', peek),
     vscode.commands.registerCommand('vscode-markdown-footnote.insertFootnote', (args) =>
-      insertFootnote(args, (document, footnoteName) => footnoteEditor.open(document, footnoteName)),
+      insertFootnote(
+        args,
+        (document, footnoteName) => footnoteEditor.open(document, footnoteName),
+        (document) => footnoteEditor.getDefinitionInsertionPosition(document),
+      ),
     ),
     vscode.commands.registerCommand('vscode-markdown-footnote.openFootnoteEditor', async () => {
       const editor = vscode.window.activeTextEditor;
