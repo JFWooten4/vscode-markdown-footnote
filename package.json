@@ -1,20 +1,20 @@
 {
   "name": "vscode-markdown-footnote",
   "displayName": "Markdown Footnote",
-  "publisher": "houkanshan",
+  "publisher": "JFWooten4",
   "description": "Support markdown footnote in VSCode editor",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.57.0"
   },
   "author": "Mai Hou <houkanshan@gmail.com>",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/houkanshan/vscode-markdown-footnote"
+    "url": "https://github.com/JFWooten4/vscode-markdown-footnote.git"
   },
   "bugs": {
-    "url": "https://github.com/houkanshan/vscode-markdown-footnote/issues"
+    "url": "https://github.com/JFWooten4/vscode-markdown-footnote/issues"
   },
   "icon": "assets/markdown-footnote.png",
   "keywords": [
@@ -78,5 +78,9 @@
   },
   "dependencies": {
     "markdown-it-footnote": "^3.0.3"
-  }
+  },
+  "homepage": "https://github.com/JFWooten4/vscode-markdown-footnote#readme",
+  "contributors": [
+    "John Wooten <john.wooten@blocktransfer.com>"
+  ]
 }

@@ -1,14 +1,14 @@
 <p align="center" style="margin: 0">
-  <a href="https://marketplace.visualstudio.com/items?itemName=houkanshan.vscode-markdown-footnote" ><img src="./assets/markdown-footnote.png" alt="VSCode Markdown Footnote" width="80" /></a>
+  <a href="https://github.com/JFWooten4/vscode-markdown-footnote"><img src="./assets/markdown-footnote.png" alt="VSCode Markdown Footnote" width="80" /></a>
 </p>
 <h1 align="center" style="margin-top: 0">VSCode Markdown Footnote</h1>
 
-[![](https://vsmarketplacebadge.apphb.com/version-short/houkanshan.vscode-markdown-footnote.svg)](https://marketplace.visualstudio.com/items?itemName=houkanshan.vscode-markdown-footnote)
-[![](https://vsmarketplacebadge.apphb.com/installs/houkanshan.vscode-markdown-footnote.svg)](https://marketplace.visualstudio.com/items?itemName=houkanshan.vscode-markdown-footnote)
-[![](https://vsmarketplacebadge.apphb.com/rating-short/houkanshan.vscode-markdown-footnote.svg)](https://marketplace.visualstudio.com/items?itemName=houkanshan.vscode-markdown-footnote&ssr=false#review-details)
-[![](https://github.com/houkanshan/vscode-markdown-footnote/workflows/CI/badge.svg?branch=master)](https://github.com/houkanshan/vscode-markdown-footnote/actions?query=workflow%3ACI+branch%3Amaster)
+[![CI](https://github.com/JFWooten4/vscode-markdown-footnote/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JFWooten4/vscode-markdown-footnote/actions/workflows/ci.yml)
 
 `[^1]` [footnote syntax](https://www.markdownguide.org/extended-syntax/#footnotes) support to VS Code's Markdown editor and preview.
+
+
+> This repository is a maintained fork of [houkanshan/vscode-markdown-footnote](https://github.com/houkanshan/vscode-markdown-footnote) by Mai Hou. The upstream work was distributed under the MIT License; its original copyright and permission notice are retained in [`LICENSE-base`](./LICENSE-base). This fork and its modifications are distributed under the GNU Affero General Public License version 3 or, at your option, any later version; see [`LICENSE`](./LICENSE).
 
 ## Features
 
@@ -40,8 +40,7 @@
 
 ## Contributing
 
-- File bugs, feature requests in [GitHub Issues](https://github.com/houkanshan/vscode-markdown-footnote/issues).
-- Leave a review on [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=houkanshan.vscode-markdown-footnote&ssr=false#review-details).
+- File bugs and feature requests in [GitHub Issues](https://github.com/JFWooten4/vscode-markdown-footnote/issues).
 
 ### Dev
 
@@ -56,8 +55,15 @@
 
 ## Thanks
 
+- [Mai Hou's original VSCode Markdown Footnote project](https://github.com/houkanshan/vscode-markdown-footnote)
 - [Markdown Footnotes](https://github.com/mjbvz/vscode-markdown-footnotes)
 - [Markdown Memo](https://github.com/svsool/vscode-memo)
+
+## License
+
+This fork is licensed under the [GNU Affero General Public License v3.0 or later](./LICENSE).
+
+The upstream code by Mai Hou was originally distributed under the MIT License. Its original copyright and permission notice are preserved in [`LICENSE-base`](./LICENSE-base).
 
 ## Changelog
 
